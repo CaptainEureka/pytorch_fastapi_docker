@@ -1,11 +1,16 @@
 import shutil
 import os
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import HTMLResponse
-from pydantic.main import BaseModel
-from typing import Optional
 import logging
 import sys
+
+from fastapi import FastAPI, Request, UploadFile, status
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+from pydantic.main import BaseModel
+from typing import Optional
+
 
 logger = logging.getLogger("FFLogger")
 logger.setLevel(logging.INFO)
@@ -21,7 +26,6 @@ from PIL import Image
 import torch, torchvision
 from torchinfo import summary
 import torch.nn as nn
-from torch.nn import Module
 from torchvision import transforms
 
 def load_model():
@@ -58,85 +62,93 @@ def image_to_tensor(img_path):
         transforms.Resize(128),
         transforms.ToTensor()
     ])
+    img.close()
     return transform(img)
 
+## ============ API ============ ##
+class Prediction(BaseModel):
+    prediction: dict
+
 app = FastAPI()
-class Data(BaseModel):
-    data: dict
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
-@app.get("/")
-def get_root():
-    return {
-        "Hello": "World"
-    }
+@app.get("/", response_class=HTMLResponse)
+def get_model(request: Request, file: Optional[str] = None, prediction: Optional[str] = None):
+    return templates.TemplateResponse("model.html", 
+        {
+            "request": request,
+            "file": file,
+            "prediction": prediction,
+        }
+    )
 
-@app.get("/test/")
-def get_test(request: Optional[Data]):
-    return {
-        "Test": request.data
-    }
+@app.get("/summary", response_class=HTMLResponse)
+def get_model_summary(request: Request):
+    model_summary = [f"{line}" for line in summary(model).__repr__().split("\n")];
+    return templates.TemplateResponse(
+        "model-summary.html", 
+        {
+            "request": request, 
+            "model_summary": model_summary
+        }
+    )
 
-@app.get("/model/summary/")
-def get_model_summary():
-    model_summary = ''.join([f"<div>{line}</div>" for line in summary(model).__repr__().split("\n")]);
-    html_response = f"""
-    <html>
-        <head>
-            <title>Model Summary</title>
-        </head>
-        <body>
-            <h1>Model Summary</h1>
-            {model_summary}
-        </body>
-    </html>
-    """
-    return HTMLResponse(content=html_response, status_code=200)
+@app.post("/upload")
+async def upload_image(request: Request, image: UploadFile):   
+    destination_filename = image.filename
+    logger.info(f"Trying to save image: {image.filename}")
+    try:
+        # Try to save the image
+        write_image(image, f"static/{destination_filename}")
+        logger.info(f"Image saved to static/{destination_filename}")
+        await image.close()
+    except:
+        logger.info("An error occured saving the image")
 
-@app.post("/model/inference/")
-async def get_model_inference(file: UploadFile):
+    url = app.url_path_for("get_model")
+    return RedirectResponse(
+        url=f"{url}?file={destination_filename}",
+        status_code=status.HTTP_303_SEE_OTHER
+    )
+
+@app.get("/predict")
+async def get_model_prediction(file: str, response_type: Optional[str] = 'html'):
 
     response = {
-        "file": {
-            "filename": file.filename,
-            "content_type": file.content_type
-        },
         "prediction": {
             "class": None
         }
     }
 
-    destination_filename = "image.png"
     try:
-        # Try to save the image
-        write_image(file, destination_filename)
-        logger.info("Image saved")
-    except:
-        logger.info("An error occured saving the image")
-
-    try:
-        img_tensor = image_to_tensor(destination_filename)
-        logger.info(f"type(img_tensor): {type(img_tensor)}, img_tensor: {img_tensor}")
+        logger.info("Converting image to tensor")
+        img_tensor = image_to_tensor(f"static/{file}")
+        logger.info(f"Image successfully converted to tensor")
     except TypeError as e:
         logger.info(f"An error occured in PyTorch: {e}")
 
     logger.info(f"Sending the image tensor to device: {device}")
     input = img_tensor.to(device)
-    logger.info(f"{type(input)}, {input.shape}")
 
     output = model.eval()(input.unsqueeze(0))
-    logger.info(f"type(output): {type(output)}")
     prediction = torch.argmax(output, dim=1)
     prediction_map = {
         0: "Cat",
         1: "Dog"
     }
     response['prediction']['class'] = prediction_map.get([p.item() for p in prediction][0])
-
     logger.info(response)
-    await file.close()
-    cleanup(destination_filename)
 
-    return response
+    url = app.url_path_for("get_model")
+    r = {
+        'html': RedirectResponse(
+                    url=f"{url}?file={file}?&prediction={response['prediction']['class']}",
+                    status_code=status.HTTP_302_FOUND
+                ),
+        'json': response
+    }
+    return r.get(response_type, response)
 
 def write_image(image: UploadFile, path: str):
     with open(path, "wb") as buffer:
