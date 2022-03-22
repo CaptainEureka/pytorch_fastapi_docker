@@ -1,12 +1,7 @@
 services:
   api:
-    build: .
+    build: .Dockerfile.gpu
     ports:
       - "8080:8080"
     volumes:
       - ./app:/code
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
