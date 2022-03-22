@@ -36,8 +36,7 @@ def load_model():
     )
     logger.info(f"Loading Model")
 
-    model.load_state_dict(torch.load(f"model/ckpt_densenet121_catdog.pth"))
-    model.to(device)
+    model.load_state_dict(torch.load(f"model/ckpt_densenet121_catdog.pth", map_location=device))
     logger.info(f"Model succesfully loaded on {device}")
     return model
 
