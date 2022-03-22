@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Cat vs. Dog</title>
+    </head>
+    <body>
+        <h1>Cat vs. Dog</h1>
+        <p for "myfile">
+            Click on "Choose File" button to upload a file:
+        </p>
+        <br>
+        {% if file %}
+        <img src= {{ url_for('static', path=file) }}/>
+        {% else %}
+        <img src= {{ url_for('static', path='placeholder.jpg') }}/>        
+        {% endif %}
+        <br>
+        <br>
+        <form action="/upload" enctype="multipart/form-data" method="post">
+            <input type="file" name="image"/>
+            <input type="submit"/>
+        </form>
+        <br>
+        {% if file %}
+        <form action="/predict" method="get">
+            <input type="hidden" name="file" value="{{file}}"/>
+            <input type="submit" value="Predict"/>
+        </form>
+        {% else %}
+        <form action="/predict" method="get">
+            <input type="hidden" name="file" value="placeholder.jpg"/>
+            <input type="submit" value="Predict"/>
+        </form>
+        {% endif %}
+        {% if prediction %}
+        <p> 
+            Prediction: <emph>{{ prediction }}</emph>
+        </p>
+        {% endif %}
+    </body>
+</html>

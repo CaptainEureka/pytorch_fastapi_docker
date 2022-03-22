@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Model Summary</title>
+    </head>
+    <body>
+        <h1>Model Summary</h1>
+        <p href="localhost:8080/model">Go to Model</p>
+        {% for line in model_summary %}
+            <a>{{ line }}</a>
+            <br>
+        {% endfor %}
+    </body>
+</html>
