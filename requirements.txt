@@ -1,0 +1,4 @@
+fastapi==0.75.0
+uvicorn==0.17.6
+python-multipart==0.0.5
+torchinfo==1.6.3

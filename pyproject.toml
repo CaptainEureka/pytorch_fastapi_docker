@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "pytorch-cat-dog"
+version = "0.1.0"
+description = "Python docker stack for cat-dog classification using PyTorch"
+authors = ["CaptainEureka <mlkoopman95@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "pytorch_cat_dog"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.75.0"
+torch = "^1.11.0"
+torchvision = "^0.12.0"
+uvicorn = "^0.17.6"
+torchinfo = "^1.6.3"
+
+
+[tool.poetry.group.dev.dependencies]
+requests = "^2.27.1"
+pytest = "^7.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
