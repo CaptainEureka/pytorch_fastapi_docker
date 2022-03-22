@@ -11,5 +11,6 @@ def test_upload_file(filepath):
     print(resp.json())
 
 if __name__ == "__main__":
-    for file in ['dog1.jpg', 'sleepy-cat.jpg']:
-        test_upload_file(f"{WORKDIR}/{file}")
+    testdir = f"{WORKDIR}/tests/images/"
+    for file in os.listdir(testdir):
+        test_upload_file(f"{WORKDIR}/tests/images/{file}")
