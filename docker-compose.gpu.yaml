@@ -1,6 +1,6 @@
 services:
   api-gpu:
-    build: .
+    build: ./Dockerfile.gpu
     ports:
       - "8080:8080"
     volumes:
