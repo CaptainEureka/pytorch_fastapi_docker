@@ -1,7 +1,17 @@
 services:
-  api:
-    build: .
+
+  backend:
+    container_name: backend
+    build: ./services/backend
     ports:
       - "8080:8080"
     volumes:
-      - ./app:/code
+      - ./services/backend/app:/code
+
+  frontend:
+    container_name: frontend
+    build: ./services/frontend
+    ports:
+      - "8081:8501"
+    volumes:
+      - ./services/frontend/app:/code

@@ -2,3 +2,10 @@ app/__pycache__/main.cpython-38.pyc
 app/model/__pycache__/CatDogNet.cpython-38.pyc
 tests/__pycache__/test.cpython-310.pyc
 app/__pycache__/frontend.cpython-38.pyc
+.python-version
+.pyenv_init.sh
+services/backend/app/__pycache__/main.cpython-38.pyc
+services/backend/app/saved_model/__pycache__/__init__.cpython-38.pyc
+services/backend/app/saved_model/__pycache__/model.cpython-38.pyc
+services/backend/app/utils/__pycache__/__init__.cpython-38.pyc
+services/backend/app/utils/__pycache__/helper.cpython-38.pyc
